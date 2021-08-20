@@ -1,0 +1,111 @@
+
+
+###############################
+#	A. Setting up GitHub 	  #
+###############################
+
+1. Create or Log into github account
+2. Go to Account Settings > Developer Settings > Personal Access Tokens
+3. Click on "Generate New Token" and select scopes 
+   (will be only needing [repo] for now)
+4. Make sure to save the token somewhere safe!
+
+
+
+###############################
+#	B. Accessing Repository	  #
+###############################
+
+1. Open Terminal
+2. Navigate to a directory for the new local git repository
+3. Type:
+	
+	$ git clone https://github.com/nlee1717/lab-test.git
+
+4. Move to the new git repo
+5. To get most updated version of the repo, type:
+	
+	$ git pull origin main
+
+	* [origin] tells git where to fetch from
+	* [main] tells git which branch to fetch
+   
+   If currently at the main branch, simply do:
+
+	$ git pull
+
+6. Make any changes:
+	i. open hello.txt file and add a line
+	ii. create a new file
+
+7. Save the change to the original (remote) repo:
+
+	$ git add <filename>
+
+	* this will add the modified files to the queue, to be commited
+	* using . in place of <filename> will add all modifications to queue
+
+	$ git commit -m "commit message"
+
+	* combine both actions with option [-a]
+
+	$ git push <location> <branch>
+
+	* use <location> = origin, <branch> = main for now
+	* not specifying location or branch will automatically follow current setting
+
+
+
+###############################
+#	C. Building Branches	  #
+###############################
+
+A branch is an independent line of development forked from the original. 
+Consider branching simply as creating a copy image of the original (or current) branch. 
+
+1. Create a new local branch and move to it:
+
+	$ git branch newBranch
+	$ git checkout newBranch
+
+	* combine the two commands by adding [-b] option to checkout
+
+2. Make the new branch available to everyone by pushing it to the remote location:
+
+	$ git push -u origin newBranch
+
+3. Again, make some changes and save:
+
+	$ git add <filename>
+	$ git commit -m "commit message"
+	$ git push origin newBranch
+
+4. Some helpful commands:
+
+	$ git branch  # this will generate list of branches for current repo
+	$ git branch -d <branch>  # deletes the <branch>
+
+
+
+###############################
+#	Notes					  #
+###############################
+
+Set up credential to avoid entering user id and password every time:
+
+	$ git config [--global] credential.helper store
+	$ git push https://github.com/owner/repo.git
+
+	Username for 'https://github.com/': <username>
+	Password for 'https://username@github.com': <password>
+
+	* use [--global] option to store credential for ALL projects, [--system] for ALL users
+
+You can also set cache expire:
+
+	$ git config [--global] credential.helper 'cache --timeout <seconds>'
+
+Manually manage the credential.helper:
+
+	$ git config [--global] --edit 
+
