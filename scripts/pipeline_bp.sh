@@ -68,17 +68,15 @@
 #
 # 2. Reads Summary Table 
 #
-# 3. Read Lengths Distribution (viral)
-#
-# 4. Viral Read Plot
+# 3. Viral Read Plot
 #
 # ~
 #
-# 5. PCA plot (cellular)
+# 4. PCA plot (cellular)
 #
-# 6. tcGSA (cellular)
+# 5. tcGSA (cellular)
 #
-# 7. edgeR
+# 6. edgeR
 #
 
 
