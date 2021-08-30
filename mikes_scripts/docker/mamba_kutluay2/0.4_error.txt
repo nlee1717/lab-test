@@ -1,0 +1,13 @@
+docker build -t yiqingw/mamba_kutluay2:0.4 .
+[+] Building 11.5s (4/4) FINISHED
+ => [internal] load build definition from Dockerfile                                                     0.1s
+ => => transferring dockerfile: 1.57kB                                                                   0.0s
+ => [internal] load .dockerignore                                                                        0.1s
+ => => transferring context: 2B                                                                          0.0s
+ => ERROR [internal] load metadata for docker.io/library/ubuntu:latest                                  11.3s
+ => [auth] library/ubuntu:pull token for registry-1.docker.io                                            0.0s
+------
+ > [internal] load metadata for docker.io/library/ubuntu:latest:
+------
+failed to solve with frontend dockerfile.v0: failed to create LLB definition: failed to authorize: rpc error:
+code = Unknown desc = failed to fetch oauth token: Get https://auth.docker.io/token?scope=repository%3Alibrary%2Fubuntu%3Apull&service=registry.docker.io: dial tcp: lookup auth.docker.io on 172.31.80.1:53: read udp 172.31.88.173:38644->172.31.80.1:53: i/o timeout
