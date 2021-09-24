@@ -38,6 +38,7 @@ RUN conda install mamba -n base -c conda-forge && \
     bioconductor-complexheatmap \
     bioconductor-edger \
     bioconductor-deseq2 \
+    r-ggrepel \
     r-gplots \
     r-statmod \
     ribotish \
