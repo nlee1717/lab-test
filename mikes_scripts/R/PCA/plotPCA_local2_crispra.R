@@ -8,21 +8,21 @@ library(edgeR)
 
 
 setwd('C:/kutluaylab/data/CRISPRa_screen/mageck/count/count_total/') # with slash in the end
-expname <- 'CRISPRa_HeLa_sort' # prefix for naming the output png
-output_dir <- "C:/kutluaylab/data/CRISPRa_screen/PCA/" # with slash, output directory
+expname <- 'CRISPRa_HeLa_death' # prefix for naming the output png
+output_dir <- "C:/kutluaylab/data/CRISPRa_screen/PCA/death/" # with slash, output directory
 
 
 raw_count <- read.delim(file = "count_total.count.txt")
-data_sort <- raw_count[, seq(15, 23)]
-row.names(data_sort) <- raw_count$sgRNA
+data_selected <- raw_count[, 3:14]
+row.names(data_selected) <- raw_count$sgRNA
 
 
-data <- DGEList(counts = data_sort)
+data <- DGEList(counts = data_selected)
 data <- calcNormFactors(data)
 
 
 ## MDS PLOT ##
-colors <- brewer.pal(length(colnames(data)), name = "Set3")
+colors <- brewer.pal(ncol(data), name = "Set3")
 names(colors) <- colnames(data)
 
 # mds <- plotMDS(data, col = colors, pch = 18, cex = 2)
@@ -46,13 +46,14 @@ dev.off()
 cpm <- cpm(data)
 
 
-n <- 200
+n <- 500
 select <- order(rowVars(as.matrix(cpm)), decreasing = TRUE)
 topNdata <- cpm[select[1:n], ]
 
+topNdata <- cpm   # <<< for no top n selection
+
 
 logcpm <- log10(topNdata + 1)
-# logcpm <- log10(cpm + 1)    # <<< for no top n selection
 
 
 data_t <- as.data.frame(t(logcpm))
@@ -64,11 +65,14 @@ df <- data.frame(pca$x)
 
 
 # df$sample <- row.names(df)
-sample_label <- c("E484D-1", "AD-1", "E484D-2", "AD-2", "WT-1", "WT-2", "AD-4", "PRE-1", "PRE-2")
+# sample_label <- c("E484D-1", "AD-1", "E484D-2", "AD-2", "WT-1", "WT-2", "AD-4", "PRE-1", "PRE-2")
+sample_label <- c("24h mock", "24h WT", "24h E484D", "72h mock", "72h WT", "72h E484D", "24h mock", "24h WT", "24h E484D", "72h mock", "72h WT", "72h E484D")
+reps <- c(rep("rep1", 6), rep("rep2", 6))
 
-df$sample <- sample_label
+# df$sample <- sample_label
 # df$sample <- factor(sample_label, levels = sample_label)   # <<< to fix sample label order in plot (default would be alphabetical)
-
+df$sample <- factor(sample_label, levels = c("24h mock", "24h WT", "24h E484D", "72h mock", "72h WT", "72h E484D"))
+df$reps <- reps
 
 
 
@@ -84,11 +88,11 @@ y.range <- y_max - y_min
 x.range <- x_max - x_min
 
 
-p <- (ggplot(df, aes(x=PC1, y=PC2, color=sample)) # PC1 vs PC2
+p <- (ggplot(df, aes(x = PC1, y = PC2, color = sample, shape = reps)) # PC1 vs PC2
   + geom_point(size=4)
 
-  + scale_x_continuous(limits=c(x_min - x.range/10, x_max + x.range/10))
-  + scale_y_continuous(limits=c(y_min - y.range/10, y_max + y.range/10))
+  + scale_x_continuous(limits = c(x_min - x.range/10, x_max + x.range/10))
+  + scale_y_continuous(limits = c(y_min - y.range/10, y_max + y.range/10))
   + scale_color_manual(values = colPalette, name = "Samples")
 
   + xlab(paste0("PC1: ", var_perc[1], "% var_perc")) # to plot PC1 vs. PC2
@@ -97,7 +101,8 @@ p <- (ggplot(df, aes(x=PC1, y=PC2, color=sample)) # PC1 vs PC2
   + ggtitle(label = "Principal Component Analysis")
   + theme_bw()
   + theme(legend.position = 'right',
-          panel.border = element_rect(colour = "black", fill=NA, size=1),
+          legend.title = element_blank(),
+          panel.border = element_rect(color = "black", fill = NA, size = 1),
           panel.grid = element_blank(),
           plot.title = element_text(hjust = 0.5),
           plot.caption = element_text(size = 10),
@@ -105,6 +110,6 @@ p <- (ggplot(df, aes(x=PC1, y=PC2, color=sample)) # PC1 vs PC2
 )
 
 
-png(filename = file.path(output_dir, paste0(expname, "_PCA_200.png")), width = 2000, height = 1400, res = 300)
+png(filename = file.path(output_dir, paste0(expname, "_PCA_500.png")), width = 2000, height = 1400, res = 300)
 print(p)
 dev.off()
