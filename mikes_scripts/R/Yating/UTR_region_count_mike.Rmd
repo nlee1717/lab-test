@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = "C:/kutluaylab/data/Vero/Yating/24hpi")
+knitr::opts_knit$set(root.dir = "C:/kutluaylab/data/old_mdm/Yating/donor1_30m")
 
 library(tidyverse)
 library(edgeR)
@@ -16,8 +16,8 @@ library(gridExtra)
 library(genefilter)
 
 save_figs <- T
-options(stringsAsFactors = FALSE)
-source("C:/kutluaylab/scripts/R/Yating/updated_scripts/ribo_profiling_functions_mike.R")
+options(stringsAsFactors = F, readr.show_types = F)
+source("C:/kutluaylab/scripts/lab-test/mikes_scripts/R/Yating/ribo_profiling_functions_mike.R")
 ```
 
 ## Specify the relative output directory and create necessary folders
@@ -25,16 +25,16 @@ source("C:/kutluaylab/scripts/R/Yating/updated_scripts/ribo_profiling_functions_
 ## global variable: relative path of the output folder 
 OUTPUT <- "exp1_results"
 ## global variable: group of samples 
-SAMPLES <- c("r1_infected", "r1_mock", "r2_infected", "r2_mock", "r3_infected", "r3_mock")
+#SAMPLES <- c("r1_infected", "r1_mock", "r2_infected", "r2_mock", "r3_infected", "r3_mock")
+SAMPLES <- c("rep1_mock", "rep1_IFN30m", "rep2_mock", "rep2_IFN30m") # this variable is not being used
 make_output_directories(OUTPUT)
 
-dir.create(file.path(OUTPUT, "reports", "count_tables"), recursive =T)
+dir.create(file.path(OUTPUT, "reports", "count_tables"), recursive = T)
 
-## check dependency: need a samples.csv file to describe replicates, treatements and etc for each sample in the current root dir
+## check dependency: need a samples.csv file to describe replicates, treatments, etc for each sample in the current root dir
 if (!file.exists("samples.csv")) {
   stop("samples.csv doesn't exist!")
 }
-
 samples <- read_csv("samples.csv")
 ```
 
@@ -42,11 +42,11 @@ samples <- read_csv("samples.csv")
 ## create counts table with all samples
 ```{r}
 counts_path <- file.path(OUTPUT, "combined_counts")
-files <- dir(path=counts_path, pattern="*.count_reduced$")
+files <- dir(path = counts_path, pattern = "*.count_reduced$")
 
 ## sort files - asc
 files <- sort(files)
-counts <- readDGE(files, path=counts_path, header = F)$counts
+counts <- readDGE(files, path = counts_path, header = F)$counts
 
 ## filter out metadata fields
 #print(nrow(counts))
@@ -55,19 +55,22 @@ counts <- counts[!noint,]
 #print(nrow(counts))
 
 ## get gene info
-#ensembl = useMart(biomart = "ENSEMBL_MART_ENSEMBL", version = "Ensembl Genes 75", dataset = "hsapiens_gene_ensembl", host = "http://feb2014.archive.ensembl.org") # human
-ensembl = useMart(biomart = "ENSEMBL_MART_ENSEMBL", version = "Ensembl Genes 90", dataset = "csabaeus_gene_ensembl", host = "http://aug2017.archive.ensembl.org") # Vero
+ensembl = useMart(biomart = "ENSEMBL_MART_ENSEMBL", version = "Ensembl Genes 75", dataset = "hsapiens_gene_ensembl", host = "http://feb2014.archive.ensembl.org") # human
+#ensembl = useMart(biomart = "ENSEMBL_MART_ENSEMBL", version = "Ensembl Genes 90", dataset = "csabaeus_gene_ensembl", host = "http://aug2017.archive.ensembl.org") # Vero
 stopifnot(length(unique(rownames(counts))) == nrow(counts))
-#gtf.ens <- getBM(attributes=c('ensembl_gene_id','external_gene_id',"gene_biotype"),filters = 'ensembl_gene_id', values = rownames(counts), mart = ensembl) # human
-gtf.ens <- getBM(attributes=c('ensembl_gene_id','external_gene_name',"gene_biotype"),filters = 'ensembl_gene_id', values = rownames(counts), mart = ensembl) # Vero
-gtf.ens <- rename(gtf.ens, external_gene_id = external_gene_name) # Vero
+gtf.ens <- getBM(attributes = c('ensembl_gene_id', 'external_gene_id', "gene_biotype"),filters = 'ensembl_gene_id', values = rownames(counts), mart = ensembl) # human
+#gtf.ens <- getBM(attributes=c('ensembl_gene_id','external_gene_name',"gene_biotype"),filters = 'ensembl_gene_id', values = rownames(counts), mart = ensembl) # Vero
+#gtf.ens <- rename(gtf.ens, external_gene_id = external_gene_name) # Vero
 
 saveRDS(gtf.ens, file.path(file.path(OUTPUT, "objs"), paste0("all", "_genes.rds")))
 
 genes <- readRDS(file.path(file.path(OUTPUT, "objs"), paste0("all", "_genes.rds")))
 genes <- genes[match(rownames(counts), genes$ensembl_gene_id),]
 genes <- na.omit(genes)
+
+print(paste0("no. genes in count: ", nrow(counts)), quote = F)
 counts <- counts[genes$ensembl_gene_id, ]
+print(paste0("no. genes in count and also biomart: ", nrow(counts)), quote = F)
 
 stopifnot(genes$ensembl_gene_id == rownames(counts))
 
@@ -78,7 +81,6 @@ write.csv(counts, file.path(file.path(OUTPUT, "reports"), paste0("raw_counts_com
 
 ## working with counts table
 ```{r}
-
 
 sums <- colSums(counts)
 
@@ -101,6 +103,22 @@ region_dist <- function(var) {
 }
 
 region_dist(var1)
-region_dist(var2)
+#region_dist(var2)
+
+
+## For old MDM donor1_30m IFN30m only ##
+var <- "IFN30m"
+
+table_var <- sums[grepl(var, names(sums))]
+table_var <- matrix(table_var, ncol = 3, byrow = T)
+
+experiment_names <- c("ribo_rep1", "ribo_rep2", "rseq_rep1")
+
+colnames(table_var) <- experiment_names
+rownames(table_var) <- c("cds","utr3","utr5")
+
+write.csv(table_var, file.path(OUTPUT, "reports", "count_tables", paste0("table_", var, ".csv")))
+
+########################################
 
 ```

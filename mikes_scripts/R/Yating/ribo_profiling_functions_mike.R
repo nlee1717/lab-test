@@ -31,7 +31,7 @@ make_dge <- function(counts_path, countFilter, region="cds") {
   ## sort the files in asc order
   files <- sort(files)
   counts <- readDGE(files, path = counts_path, header = F)$counts
-  print(dim(counts))
+  #print(dim(counts))
   # filter out metadata fields in counts (not currently useful)
   noint <- rownames(counts) %in% c("__no_feature","__ambiguous","__too_low_aQual",
                                    "__not_aligned","__alignment_not_unique")
@@ -41,14 +41,14 @@ make_dge <- function(counts_path, countFilter, region="cds") {
   #print(colnames(counts))
   
   # get gene information from ensembl
-  #ensembl = useMart(biomart = "ENSEMBL_MART_ENSEMBL", version = "Ensembl Genes 75", dataset = "hsapiens_gene_ensembl", host = "http://feb2014.archive.ensembl.org") # human
-  ensembl = useMart(biomart = "ENSEMBL_MART_ENSEMBL", version = "Ensembl Genes 90", dataset = "csabaeus_gene_ensembl", host = "http://aug2017.archive.ensembl.org") # Vero
+  ensembl = useMart(biomart = "ENSEMBL_MART_ENSEMBL", version = "Ensembl Genes 75", dataset = "hsapiens_gene_ensembl", host = "http://feb2014.archive.ensembl.org") # human
+  #ensembl = useMart(biomart = "ENSEMBL_MART_ENSEMBL", version = "Ensembl Genes 90", dataset = "csabaeus_gene_ensembl", host = "http://aug2017.archive.ensembl.org") # Vero
   
   stopifnot(length(unique(rownames(counts))) == nrow(counts))
   
-  # gtf.ens <- getBM(attributes=c('ensembl_gene_id','external_gene_id',"gene_biotype"), filters = 'ensembl_gene_id', values = rownames(counts), mart = ensembl) # human
-  gtf.ens <- getBM(attributes=c('ensembl_gene_id','external_gene_name',"gene_biotype"), filters = 'ensembl_gene_id', values = rownames(counts), mart = ensembl) # Vero
-  gtf.ens <- rename(gtf.ens, external_gene_id = external_gene_name) # Vero
+  gtf.ens <- getBM(attributes=c('ensembl_gene_id','external_gene_id',"gene_biotype"), filters = 'ensembl_gene_id', values = rownames(counts), mart = ensembl) # human
+  # gtf.ens <- getBM(attributes=c('ensembl_gene_id','external_gene_name',"gene_biotype"), filters = 'ensembl_gene_id', values = rownames(counts), mart = ensembl) # Vero
+  # gtf.ens <- rename(gtf.ens, external_gene_id = external_gene_name) # Vero
   
   saveRDS(gtf.ens, file.path(file.path(OUTPUT, "objs"), paste0(region, "_genes.rds")))
   
@@ -61,6 +61,8 @@ make_dge <- function(counts_path, countFilter, region="cds") {
   # added lines ##############################
   genes <- na.omit(genes)
   counts <- counts[genes$ensembl_gene_id, ] # human
+  print(noquote("genes in count table also in gene db:"))
+  print(dim(counts))
   ############################################
   
   stopifnot(genes$ensembl_gene_id == rownames(counts))
@@ -85,7 +87,7 @@ make_dge <- function(counts_path, countFilter, region="cds") {
   dge$samples$experiment_type <- samples$experiment_type
   
   # store only protein coding genes for later analysis
-  dge <- dge[dge$genes$gene_biotype == "protein_coding",]
+  dge <- dge[dge$genes$gene_biotype == "protein_coding", ,keep.lib.sizes = F]
   dge <- na.omit(dge)
   print(noquote("protein coding: "))
   print(dim(dge$genes))
@@ -133,23 +135,25 @@ generate_reprod_plot <- function(cpmTable, dataType) {
 generate_mds <- function(dge, dataType) {
   # function to generate MDS plot
   # Args:
-  #   dge: DGE object create by make_dge
-  #   dataType: experiment name either rnaseq or riboseq
+  #   dge: DGE object created by make_dge
+  #   dataType: experiment name, either rnaseq or riboseq
   
-  colors<-c('deepskyblue', 'darkorchid2', 'seagreen2', 'midnightblue')
+  #colors <- c('deepskyblue', 'darkorchid2', 'seagreen2', 'midnightblue')
+  # new palette to allow more colors
+  colors <- brewer.pal(8, "Set1")
   dge_sub <- dge[, grep(dataType, colnames(dge))]
   if (save_figs) pdf(file.path(file.path(OUTPUT, "reports", "figs"), paste0(dataType, "_MDS_dim_1_2.pdf")))
-  plotMDS(dge_sub, col=colors, dim.plot = c(1,2))
+  plotMDS(dge_sub, col = colors, dim.plot = c(1, 2))
   #legend('topright', legend=dge_sub$samples$group, col=colors, cex=1, pch=18)
   if (save_figs) dev.off()
   
   if (save_figs) pdf(file.path(file.path(OUTPUT, "reports", "figs"), paste0(dataType, "_MDS_dim_1_3.pdf")))
-  plotMDS(dge_sub, col=colors, dim.plot = c(1,3))
+  plotMDS(dge_sub, col = colors, dim.plot = c(1, 3))
   #legend('bottomright', legend=dge_sub$samples$group, col=colors, cex=1, pch=18)
   if (save_figs) dev.off()
   
   if (save_figs) pdf(file.path(file.path(OUTPUT, "reports", "figs"), paste0(dataType, "_MDS_dim_2_3.pdf")))
-  plotMDS(dge_sub, col=colors, dim.plot = c(2, 3))
+  plotMDS(dge_sub, col = colors, dim.plot = c(2, 3))
   #legend('bottomright', legend=dge_sub$samples$group, col=colors, cex=1, pch=18)
   if (save_figs) dev.off()
 }
@@ -165,13 +169,15 @@ plot_CV_vs_CPM <- function(cpmTable, repList, dataType) {
     tb <- cpmTable %>% 
       mutate(mean=abs(rowMeans(.[reps])), sd = rowSds(.[reps]), cv = sd/mean,
              reps = paste(reps, collapse = "_vs_"))
-    reps_name <- paste(reps, collapse = "_and_")
+    # is the reason of taking abs of mean here to keep cv positive?
+    # is letting negative logCPM appear positive good?
+    reps_name <- paste(reps, collapse = " and ")
     
     pt <- ggplot(tb, aes(x=mean, y=cv)) +
       geom_point(size=0.5) +
       ylim(c(0, 25)) +
       xlim(c(0, 25)) +
-      labs(x = "Mean log2 CPM", y = "Coefficient variantion", title = reps_name)
+      labs(x = "Mean log2 CPM", y = "Coefficient of variation", title = reps_name)
     
     if (save_figs) {
       pdf(file.path(file.path(OUTPUT, "reports", "figs"), paste0(reps_name, "_CV_vs_CPM.pdf")))
@@ -196,20 +202,20 @@ filter_dge <- function(dge, region, ribothreshold = 1, rseqthreshold = 1) {
   #   rseqthreshold: cut-off cpm value for rnaseq samples for filtering
   #   #threshold: cut-off value of log2 CPM for filtering
   #   #numRep: minimum number of replicates
-  print("dimension before filtering:")
+  print("dimension before filtering:", quote = F)
   print(dim(dge))
   #print(head(cpm(dge, log=T, prior.count = 1), n=10))
   #write.csv(cpm(dge), file = file.path(OUTPUT, "reports", paste0("original_cpm_", region, ".csv")))
   
-  numrep <- ncol(dge) / 4
+  numrep <- ncol(dge) / 4 # divided by 2 data types and 2 conditions
   #keep <- rowSums(cpm(dge) > threshold) >= numRep 
   cpm_temp <- cpm(dge)
   keep <- (rowSums(cpm_temp[, 1:(ncol(cpm_temp) / 2)] > ribothreshold) >= numrep) &
     (rowSums(cpm_temp[, (ncol(cpm_temp) / 2 + 1):(ncol(cpm_temp))] > rseqthreshold) >= numrep)
-  
   print(table(keep))
-  dge <- dge[keep, ,keep.lib.sizes=FALSE]
-  print("dimension after filtering:")
+  
+  dge <- dge[keep, ,keep.lib.sizes = FALSE]
+  print("dimension after filtering:", quote = F)
   print(dim(dge))
   #print(head(dge))
   
@@ -226,7 +232,7 @@ get_table_for_samples <- function(samplesList, cpmTable) {
   # function to calculate TE of each sample 
   # Args:
   #   samplesList: names of all samples without dataType 
-  #   cpmTable: CPM table from make_dge
+  #   cpmTable: CPM table from make_dge or filter_dge
   
   table <- data.frame(ensembl_gene_id = cpmTable$ensembl_gene_id)
   
@@ -269,9 +275,9 @@ de_analysis <- function(dge, region = "") {
   design <- model.matrix(~0+group)
   colnames(design) <- levels(group)
   contrasts <- makeContrasts(
-    time_infected_vs_mock_rnaseq = time_infected_rnaseq - time_mock_rnaseq,
-    time_infected_vs_mock_riboseq = time_infected_riboseq - time_mock_riboseq,
-    time_infected_vs_mock_te = (time_infected_riboseq - time_mock_riboseq) - (time_infected_rnaseq - time_mock_rnaseq),
+    time_IFN4h_vs_mock_rnaseq = time_IFN4h_rnaseq - time_mock_rnaseq,
+    time_IFN4h_vs_mock_riboseq = time_IFN4h_riboseq - time_mock_riboseq,
+    time_IFN4h_vs_mock_te = (time_IFN4h_riboseq - time_mock_riboseq) - (time_IFN4h_rnaseq - time_mock_rnaseq),
     levels = design
   )
   
@@ -280,7 +286,13 @@ de_analysis <- function(dge, region = "") {
   ##  A common dispersion (i.e. red line on the BCV plot) between 0.2 and 0.4 is usually considered reasonable and hence could detect more DE genes.If the common dispersion is above the 0.4 threshold, this will influence the number of DE genes found in the study. 
   # note: red line on BCV plot is biological coefficient of variation (square root of common dispersion), not common dispersion.
   message("common dispersion = ", dge$common.dispersion)
+  
   plotBCV(dge)
+  if (save_figs) {
+    pdf(file = file.path(OUTPUT, "reports", "figs", paste0("de_bcv", region, ".pdf")))
+    plotBCV(dge)
+    dev.off()
+  }
   
   fit <- glmFit(dge, design)
   

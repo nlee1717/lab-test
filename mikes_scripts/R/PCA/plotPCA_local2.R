@@ -16,19 +16,19 @@ library(edgeR)
 # # filename format should be: experiment_condition_timepoint
 # # condition = infected OR mock
 
-setwd('C:/kutluaylab/data/CRISPRa_screen/mageck/count/count_total/') # with slash in the end
-expname <- 'CRISPRa_HeLa_sort' # prefix for naming the output png
-output_dir <- "C:/kutluaylab/data/CRISPRa_screen/PCA/" # with slash, output directory
+setwd('C:/kutluaylab/data/old_rp/PCA/counts/d1/') # with slash in the end
+expname <- 'mdm_rp_donor1' # prefix for naming the output png
+output_dir <- "C:/kutluaylab/data/old_rp/PCA/" # with slash, output directory
 
 ### LOADING DATA
-filelist <- list.files(pattern = "*hpi") ## adjust the pattern accordingly
+filelist <- list.files(pattern = "r+") ## adjust the pattern accordingly
 print(filelist)
-data <- read.table(filelist[1], head = FALSE, sep = '\t')
+data <- read.table(filelist[1], header = FALSE, sep = '\t')
 row.names(data) <- data[,1]
 data <- data[, -c(1, 2)]
 
 for (file in filelist) {
-  table <- read.table(file, head = FALSE, sep = '\t', col.names=c('id', file))
+  table <- read.table(file, header = FALSE, sep = '\t', col.names = c('id', file))
   data <- cbind(data, table[, 2])
 }
 
@@ -47,13 +47,19 @@ conv_to_rep <- function(explist) { # converts the experiment names to "repn"
 }
 
 saveMock <- function(cond,time) { # saves the time points of the mock samples
-  if (cond == 'mock') return(paste(cond, time, sep = '-')) # saves as "mock-nhpi"
-  #if (cond == 'mock') return(cond) # saves as "mock"
+  # if (cond == 'mock') return(paste(cond, time, sep = '-')) # saves as "mock-nhpi"
+  if (cond == 'mock') return(cond) # saves as "mock"
   else return(time)
 }
 
 experiments <- sapply(strsplit(filelist,'_'), function(x) x[1])
 experiments <- conv_to_rep(experiments)
+experiments <- c(rep("donor4-rep1", 4), rep("donor3-rep1", 4), rep("donor1-rep1", 4),
+                 rep("donor4-rep2", 4), rep("donor3-rep2", 4), rep("donor1-rep2", 4)) # old mdm rseq all only
+experiments <- c(rep("donor4-rep1", 4), rep("donor3-rep1", 4), rep("donor1-rep1", 4),
+                 rep("donor1-rep3", 2), rep("donor1-rep4", 2), rep("donor4-rep2", 4),
+                 rep("donor3-rep2", 4), rep("donor3-rep3", 4), rep("donor1-rep2", 4)) # old mdm rp all only
+experiments <- c(rep("rep1", 4), rep("rep3", 2), rep("rep4", 2), rep("rep2", 4)) # old mdm rp donor1 only
 print(experiments)
 condition <- sapply(strsplit(filelist,'_'), function(x) x[2])
 print(condition)
@@ -66,9 +72,9 @@ rownames(design) <- filelist
 
 
 ### for CRISPRa screen PCA only ###
-raw_count <- read.delim(file = "count_total.count.txt")
-data_sort <- raw_count[, seq(15, 23)]
-row.names(data_sort) <- raw_count$sgRNA
+# raw_count <- read.delim(file = "count_total.count.txt")
+# data_sort <- raw_count[, seq(15, 23)]
+# row.names(data_sort) <- raw_count$sgRNA
 ###################################
 
 
@@ -98,9 +104,9 @@ print(nrow(topNdata))
 
 ## selecting top n genes with the most variance (needs at least n genes that pass the previous filters)
 
-n <- 1000
-select <- order(rowVars(as.matrix(topNdata)), decreasing = TRUE)
-topNdata <- topNdata[select[1:n], ]
+# n <- 1000
+# select <- order(rowVars(as.matrix(topNdata)), decreasing = TRUE)
+# topNdata <- topNdata[select[1:n], ]
 
 
 ## transforming the normalized counts into log10 scale
@@ -122,8 +128,8 @@ var_perc <- sprintf("%.2f", round((vars / sum(vars)) * 100, 2))
 df <- cbind(data.frame(pca$x), design)
 
 ## designing labels for the plot (ggrepel) (not currently used)
-df$Label <- df$timepoints
-#df$Label[which(design$experiments != 'rep1')] <- ""
+# df$Label <- df$timepoints
+# df$Label[which(design$experiments != 'rep1')] <- ""
 
 
 ### PLOTTING PCA
@@ -139,29 +145,31 @@ y_min <- min(df$PC2)
 y.range <- y_max - y_min
 x.range <- x_max - x_min
 
-  df$timepoints <- factor(df$timepoints, levels = c("mock-2hpi", "mock-6hpi", "mock-12hpi", "mock-24hpi", "mock-hpi")) # to specify the ordering of timepoint legends for a particular plot
+df$timepoints <- factor(df$timepoints, levels = c("mock", "30m", "1h", "4h")) # to specify the ordering of timepoint legends for a particular plot
 
-  p <- (ggplot(df, aes(x=PC1, y=PC2, shape=as.factor(experiments), color=timepoints, label=Label)) # PC1 vs PC2
-        + geom_point(size=4)
+p <- (ggplot(df, aes(x = PC1, y = PC2, shape = as.factor(experiments), color = timepoints)) # PC1 vs PC2
+        + geom_point(size = 4)
         #+ geom_text_repel(size=4, box.padding=0.5)
         
-        + scale_x_continuous(limits=c(x_min - x.range/10, x_max + x.range/10))
-        + scale_y_continuous(limits=c(y_min - y.range/10, y_max + y.range/10))
+        + scale_x_continuous(limits = c(x_min - x.range / 10, x_max + x.range / 10))
+        + scale_y_continuous(limits = c(y_min - y.range / 10, y_max + y.range / 10))
         + scale_shape_discrete(name = "Experiment")
+        # + scale_shape_manual(name = "Experiment",
+        #                      values = c(19, 17, 15, 3, 7, 8, 5, 11, 10))
         + scale_color_manual(values = colPalette, name = "Timepoint")
 
-        + xlab(paste0("PC1: ", var_perc[1], "% var_perc")) # to plot PC1 vs. PC2
-        + ylab(paste0("PC2: ", var_perc[2], "% var_perc"))
+        + xlab(paste0("PC1: ", var_perc[1], "% variance")) # to plot PC1 vs. PC2
+        + ylab(paste0("PC2: ", var_perc[2], "% variance"))
 
         + ggtitle(label = "Principal Component Analysis")
         + theme_bw()
         + theme(legend.position = 'right',
-                panel.border = element_rect(colour = "black", fill=NA, size=1),
+                panel.border = element_rect(colour = "black", fill = NA, size = 1),
                 panel.grid = element_blank(),
                 plot.title = element_text(hjust = 0.5),
                 plot.caption = element_text(size = 10),
                 aspect.ratio = 1)
-  )
+)
 
 
 
@@ -173,9 +181,9 @@ y_min <- min(df$PC3)
 y.range <- y_max - y_min
 x.range <- x_max - x_min
 
-df$timepoints <- factor(df$timepoints, levels = c("mock-2hpi", "mock-6hpi", "mock-12hpi", "mock-24hpi", "mock-hpi")) # to specify the ordering of timepoint legends for a particular plot
+df$timepoints <- factor(df$timepoints, levels = c("mock", "30m", "1h", "4h")) # to specify the ordering of timepoint legends for a particular plot
 
-p2 <- (ggplot(df, aes(x=PC2, y=PC3, shape=as.factor(experiments), color=timepoints, label=Label)) # PC2 vs PC3
+p2 <- (ggplot(df, aes(x=PC2, y=PC3, shape=as.factor(experiments), color=timepoints)) # PC2 vs PC3
         + geom_point(size=4)
         #+ geom_text_repel(size=4, box.padding=0.5)
         
@@ -199,10 +207,10 @@ p2 <- (ggplot(df, aes(x=PC2, y=PC3, shape=as.factor(experiments), color=timepoin
 
 
 ### SAVING THE PLOT
-png(paste0(output_dir, paste(expname, "PCA_PC1_vs_PC2.png", sep = '_')),2000,1400, res = 300)
+png(paste0(output_dir, paste(expname, "PCA_PC1_v_PC2.png", sep = '_')),2000,1400, res = 300)
 print(p)
 dev.off()
 
-png(paste0(output_dir, paste(expname, "PCA_PC2_vs_PC3.png", sep = '_')),2000,1400, res = 300)
+png(paste0(output_dir, paste(expname, "PCA_PC2_vs_PC3_noTopVar1000.png", sep = '_')),2000,1400, res = 300)
 print(p2)
 dev.off()

@@ -197,7 +197,13 @@ save(enrichment.results_wide,
 # Kyle's rseq v1 stopped here #
 
 
+
 ## Manual selection of interesting terms ##
+
+outputname <- "ribo_all_heatmap_v2_ER"
+load(file.path(path, "enrichment_results", paste0(outputname, "_results_wide.RData")))
+
+
 selected_term_index <- read.table(file = file.path(path, "selected_term", "selected_term_index.txt"),
                                   header = F)[, 1] # selected manually
 
@@ -213,7 +219,12 @@ excluded_terms <- setdiff(selected_term_upper, enrichment.results.pruned$Descrip
 enrichment.results.pruned <- arrange(enrichment.results.pruned, category)
 
 # clusters that have selected terms
+selected_clusters <- c(1, 4)
 selected_clusters <- enriched_cluster
+## for Kyle Exp92 ribo only, to only include clusters with selected terms, need improvement ##
+enrichment.results.pruned <- enrichment.results.pruned[, c(1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17,
+                                                           18, 20, 21, 23, 24, 26)]
+###################################
 
 
 ## Changing the style of the Description column ##
@@ -243,6 +254,24 @@ enrichment.results.pruned[23, "category"] <- "Biological Process"
 custom.order <- c(1, 2, 3, 4, 5, 6, 7, 8, 22, 23, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21)
 enrichment.results.pruned <- enrichment.results.pruned[custom.order, ]
 ########################
+
+## Only for Kyle Exp92 rseq ##
+enrichment.results.pruned[19, "Description"] <- "DNA Binding Transcription Activator Activity (MF)"
+enrichment.results.pruned[19, "category"] <- "Biological Process"
+enrichment.results.pruned[20, "Description"] <- "DNA Binding Transcription Repressor Activity (MF)"
+enrichment.results.pruned[20, "category"] <- "Biological Process"
+
+custom.order <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 19, 20, 16, 17, 18)
+enrichment.results.pruned <- enrichment.results.pruned[custom.order, ]
+#############################
+
+## Only for Kyle Exp92 ribo ##
+enrichment.results.pruned[12, "Description"] <- paste0(enrichment.results.pruned[12, "Description"], " (HM)")
+enrichment.results.pruned[13, "Description"] <- paste0(enrichment.results.pruned[13, "Description"], " (MF)")
+enrichment.results.pruned[14, "Description"] <- paste0(enrichment.results.pruned[14, "Description"], " (MF)")
+enrichment.results.pruned[15, "Description"] <- paste0(enrichment.results.pruned[15, "Description"], " (MF)")
+# did not change those rows to "Biological Process" here
+##############################
 
 
 save(enrichment.results.pruned,
@@ -351,7 +380,7 @@ col.annot <- HeatmapAnnotation(cluster = anno_simple(colnames(em.q.values),
 h <- Heatmap(em.q.values,
              # labels
              column_title = "Enriched Gene Sets",
-             column_title_gp = gpar(fontsize = 13),
+             column_title_gp = gpar(fontsize = 9),
              column_names_gp = gpar(fontsize = 10),
              column_names_rot = 0,
              row_title_gp = gpar(fontsize = 12),
@@ -384,7 +413,7 @@ h <- Heatmap(em.q.values,
              cell_fun = function(j, i, x, y, width, height, fill) {
                grid.rect(x = x, y = y, width = width, height = height,
                          gp = gpar(fill = "white", col = "#EEEEEE")) # white rectangles in the background
-               grid.circle(x = x, y = y, r = sqrt(ratio.values[i, j]) * 8, # <<< change size of circles according to ratio distribution
+               grid.circle(x = x, y = y, r = sqrt(ratio.values[i, j]) * 4, # <<< change size of circles according to ratio distribution
                            default.units = "mm",
                            # coloring the circles according to the q-values
                            gp = gpar(fill = col_fun(em.q.values[i, j]), col = NA))
@@ -399,7 +428,7 @@ h <- Heatmap(em.q.values,
 ## Q-value legend ##
 q_legend <- Legend(col_fun = col_fun,
                    title = "-log10(q-value)",
-                   title_gp = gpar(fontsize = 10),
+                   title_gp = gpar(fontsize = 9),
                    labels_gp = gpar(fontsize = 8),
                    grid_height = unit(4, "mm"),
                    direction = "horizontal")
@@ -407,7 +436,7 @@ q_legend <- Legend(col_fun = col_fun,
 
 
 ## Ratio value legend ##
-ratio_breaks <- c(0.1, 0.075, 0.05, 0.025) # <<< change manually
+ratio_breaks <- c(0.5, 0.4, 0.3, 0.2, 0.1) # <<< change manually
 # ratio_breaks <- c(0.25, 0.2, 0.15, 0.1, 0.05) # Vero rseq
 # ratio_breaks <- c(0.8, 0.6, 0.4, 0.2) # Vero ribo
 
@@ -415,11 +444,11 @@ ratio_legend <- Legend(labels = ratio_breaks,
                        grid_height = unit(6, "mm"),
                        grid_width = unit(6, "mm"),
                        title = "Percent\nof Cluster",
-                       title_gp = gpar(fontsize = 10),
+                       title_gp = gpar(fontsize = 9),
                        labels_gp = gpar(fontsize = 8),
                        type = "points",
                        pch = 1, # circle
-                       size = unit(sqrt(ratio_breaks) * 20, "mm"), # <<< not the same as in cell_fun, change for consistency
+                       size = unit(sqrt(ratio_breaks) * 10, "mm"), # <<< not the same as in cell_fun, change for consistency
                        # direction = "horizontal", # not working for some reason
                        # legend_gp = gpar(col = "black"),
                        background = "white"
@@ -447,8 +476,21 @@ ratio_legend <- Legend(labels = ratio_breaks,
 # draw(ratio_legend, x = unit(0.9, "npc"), y = unit(0.88, "npc"))
 # dev.off() # Vero ribo short
 
-png(filename = file.path(path, "heatmap", paste0(outputname, ".png")), height = 2000, width = 1400, res = 300)
-draw(h, padding = unit(c(2, 5, 8, 20), "mm")) # padding: empty space around heatmap, for legends, row names...
-draw(q_legend, x = unit(0.7, "npc"), y = unit(0.95, "npc")) # drawing the legend at (x, y) position
-draw(ratio_legend, x = unit(0.9, "npc"), y = unit(0.89, "npc"))
-dev.off() # HBEC rseq
+# png(filename = file.path(path, "heatmap", paste0(outputname, ".png")), height = 2000, width = 1400, res = 300)
+# draw(h, padding = unit(c(2, 5, 8, 20), "mm")) # padding: empty space around heatmap, for legends, row names...
+# draw(q_legend, x = unit(0.7, "npc"), y = unit(0.95, "npc")) # drawing the legend at (x, y) position
+# draw(ratio_legend, x = unit(0.9, "npc"), y = unit(0.89, "npc"))
+# dev.off() # HBEC rseq
+
+# png(filename = file.path(path, "heatmap", paste0(outputname, ".png")), height = 2000, width = 1400, res = 300)
+# draw(h, padding = unit(c(2, 5, 8, 19), "mm")) # padding: empty space around heatmap, for legends, row names...
+# draw(q_legend, x = unit(0.7, "npc"), y = unit(0.95, "npc")) # drawing the legend at (x, y) position
+# draw(ratio_legend, x = unit(0.9, "npc"), y = unit(0.87, "npc"))
+# dev.off() # Kyle Exp92 rseq
+
+png(filename = file.path(path, "heatmap", paste0(outputname, ".png")), height = 2000, width = 1200, res = 300)
+draw(h, padding = unit(c(2, 5, 8, 16), "mm")) # padding: empty space around heatmap, for legends, row names...
+draw(q_legend, x = unit(0.6, "npc"), y = unit(0.95, "npc")) # drawing the legend at (x, y) position
+draw(ratio_legend, x = unit(0.9, "npc"), y = unit(0.87, "npc"))
+dev.off() # Kyle Exp92 ribo
+

@@ -11,17 +11,18 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = "C:/kutluaylab/data/Vero/Yating/24hpi")
+knitr::opts_knit$set(root.dir = "C:/kutluaylab/data/old_mdm/Yating/test")
 
 library(tidyverse)
 library(edgeR)
 library(biomaRt)
+library(RColorBrewer)
 library(gridExtra)
 library(genefilter)
 
 save_figs <- T
-options(stringsAsFactors = FALSE)
-source("C:/kutluaylab/scripts/R/Yating/updated_scripts/ribo_profiling_functions_mike.R")
+options(stringsAsFactors = F, readr.show_types = F)
+source("C:/kutluaylab/scripts/lab-test/mikes_scripts/R/Yating/ribo_profiling_functions_mike.R")
 ```
 
 ## Specify the relative output directory and create necessary folders
@@ -29,7 +30,7 @@ source("C:/kutluaylab/scripts/R/Yating/updated_scripts/ribo_profiling_functions_
 ## global variable: relative path of the output folder 
 OUTPUT <- "exp1_results"
 ## global variable: group of samples 
-SAMPLES <- c("r1_mock", "r1_infected", "r2_mock", "r2_infected", "r3_mock", "r3_infected")
+SAMPLES <- c("rep1_mock", "rep1_IFN30m", "rep2_mock", "rep2_IFN30m")
 make_output_directories(OUTPUT)
 
 ## check dependency: need a samples.csv file to describe replicates, treatments and etc for each sample in the current root dir
@@ -48,7 +49,7 @@ if (!dir.exists(file.path(OUTPUT, "htseq_count_cds"))) {
 }
 
 # Make DGE object for all samples
-make_dge(file.path(OUTPUT, "htseq_count_cds"), "", region = "cds")
+make_dge(file.path(OUTPUT, "htseq_count_cds"), "", region = "cds") # change organism in make_dge()
 
 ```
 
@@ -56,7 +57,6 @@ make_dge(file.path(OUTPUT, "htseq_count_cds"), "", region = "cds")
 
 ### reproducibility
 ```{r}
-
 all_cpm <- read_csv(file.path(OUTPUT, "reports","cpm_cds.csv"))
 
 generate_reprod_plot(all_cpm, "riboseq")
@@ -68,17 +68,15 @@ generate_reprod_plot(all_cpm, "rnaseq")
 ```{r}
 dge_all <- readRDS(file.path(OUTPUT, "objs", "dge_cds_protein_coding.rds"))
 
-
 generate_mds(dge_all, "riboseq")
 generate_mds(dge_all, "rnaseq")
-
 ```
 
 ## find the threshold to cut the low expressed genes
 ```{r}
 require(genefilter)
 
-replications <- list(c("r1_mock", "r2_mock", "r3_mock"), c("r1_infected", "r2_infected", "r3_infected"))
+replications <- list(c("rep1_mock", "rep2_mock"), c("rep1_IFN1h", "rep2_IFN1h"))
 plot_CV_vs_CPM(all_cpm, replications, "rnaseq")
 plot_CV_vs_CPM(all_cpm, replications, "riboseq")
 
@@ -96,7 +94,7 @@ generate_reprod_plot(all_cpm_filt, "rnaseq") # overwrites the plots generated in
 generate_reprod_plot(all_cpm_filt, "riboseq")
 ```
 
-## Check if Ribosome profiling work
+## Check if Ribosome profiling work 
 
 ### CDS TE distribution
 ```{r}
@@ -105,7 +103,7 @@ combined_table <- get_table_for_samples(SAMPLES, all_cpm_filt)
 for (sample in SAMPLES) {
   dens_plot <- ggplot(combined_table, aes_string(x=paste0("`", sample, "_te`"))) +
     geom_density() +
-    xlim(-5, 5)
+    xlim(-5, 5) # note the x axis limits TE plotted to (-5, 5)
   if (save_figs) ggsave(file.path(file.path(OUTPUT, "reports", "figs"), paste0(sample, "_te_cds.pdf")), plot = dens_plot)
   print(dens_plot)
 }
@@ -116,13 +114,13 @@ for (sample in SAMPLES) {
 #### Generate cds GTF, utr3 GTF and utr5 GTF 
 
 ```{r, eval=T}
-#ensembl = useMart(biomart = "ENSEMBL_MART_ENSEMBL", version = "Ensembl Genes 75", dataset = "hsapiens_gene_ensembl", host = "http://feb2014.archive.ensembl.org") # human
-ensembl = useMart(biomart = "ENSEMBL_MART_ENSEMBL", version = "Ensembl Genes 90", dataset = "csabaeus_gene_ensembl", host = "http://aug2017.archive.ensembl.org") # Vero
+ensembl = useMart(biomart = "ENSEMBL_MART_ENSEMBL", version = "Ensembl Genes 75", dataset = "hsapiens_gene_ensembl", host = "http://feb2014.archive.ensembl.org") # human
+#ensembl = useMart(biomart = "ENSEMBL_MART_ENSEMBL", version = "Ensembl Genes 90", dataset = "csabaeus_gene_ensembl", host = "http://aug2017.archive.ensembl.org") # Vero
 
 
-# filtered_genes_ens <- getBM(attributes=c('ensembl_gene_id','ensembl_transcript_id', 'chromosome_name', 'strand', 'external_gene_id', '5_utr_start', '5_utr_end', '3_utr_start', '3_utr_end', 'genomic_coding_start', 'genomic_coding_end'), filters = 'ensembl_gene_id', values = all_cpm_filt$ensembl_gene_id, mart = ensembl) # human
-filtered_genes_ens <- getBM(attributes=c('ensembl_gene_id','ensembl_transcript_id', 'chromosome_name', 'strand', 'external_gene_name', '5_utr_start', '5_utr_end', '3_utr_start', '3_utr_end', 'genomic_coding_start', 'genomic_coding_end'), filters = 'ensembl_gene_id', values = all_cpm_filt$ensembl_gene_id, mart = ensembl) # Vero
-filtered_genes_ens <- rename(filtered_genes_ens, external_gene_id = external_gene_name) # Vero, changing the col variable name to match rest of the code
+filtered_genes_ens <- getBM(attributes=c('ensembl_gene_id','ensembl_transcript_id', 'chromosome_name', 'strand', 'external_gene_id', '5_utr_start', '5_utr_end', '3_utr_start', '3_utr_end', 'genomic_coding_start', 'genomic_coding_end'), filters = 'ensembl_gene_id', values = all_cpm_filt$ensembl_gene_id, mart = ensembl) # human
+#filtered_genes_ens <- getBM(attributes=c('ensembl_gene_id','ensembl_transcript_id', 'chromosome_name', 'strand', 'external_gene_name', '5_utr_start', '5_utr_end', '3_utr_start', '3_utr_end', 'genomic_coding_start', 'genomic_coding_end'), filters = 'ensembl_gene_id', values = all_cpm_filt$ensembl_gene_id, mart = ensembl) # Vero
+#filtered_genes_ens <- rename(filtered_genes_ens, external_gene_id = external_gene_name) # Vero, changing the col variable name to match rest of the code
 
 
 cds_regions <- filtered_genes_ens %>% 
@@ -295,7 +293,7 @@ write.csv(combined_table_all_te_melt, file.path(OUTPUT, "reports", "combined_tab
 
 
 for (sam in SAMPLES) {
-  dens_plot <- ggplot(subset(combined_table_all_te_melt, group == sam), aes(x=TE, group = region, fill = region)) +
+  dens_plot <- ggplot(subset(combined_table_all_te_melt, group == sam), aes(x = TE, group = region, fill = region)) +
     geom_density(alpha = 0.3) +
     xlim(-5, 5) +
     labs(title = sam)
@@ -308,15 +306,14 @@ for (sam in SAMPLES) {
 ### Scatterplot of RNAseq vs Riboseq 
 ```{r}
 for (sample in SAMPLES) {
-  sub_table <- data.frame(rnaseq = combined_table[[paste0(sample, "_rnaseq")]],
-                          riboseq = combined_table[[paste0(sample, "_rf")]])
+  sub_table <- data.frame(rnaseq = combined_table[[paste0(sample, "_rnaseq")]], riboseq = combined_table[[paste0(sample, "_rf")]])
   m <- lm(riboseq ~ rnaseq, sub_table) # lm: linear model
   r2 = paste0("italic(R) ^ 2 == ", format(summary(m)$r.squared, digits = 3))
   
-  pt <- ggplot(sub_table, aes(x=rnaseq, y = riboseq)) +
+  pt <- ggplot(sub_table, aes(x = rnaseq, y = riboseq)) +
     geom_point(alpha = 0.6, color = "grey50") +
     annotate("text", x = 0, y = 15, label = r2, parse = TRUE) +
-    labs(x=paste0(sample, " RNA-seq (log2 CPM)"), y = paste0(sample, " RF (log2 CPM)")) +
+    labs(x = paste0(sample, " RNA-seq (log2 CPM)"), y = paste0(sample, " RF (log2 CPM)")) +
     theme_bw()
   if (save_figs) ggsave(file.path(file.path(OUTPUT, "reports", "figs"), paste0(sample, "_rnaseq_vs_riboseq_scatter.pdf")), plot = pt)
   print(pt)
@@ -337,13 +334,13 @@ for (sample in SAMPLES) {
 library(riboWaltz)
 require(riboWaltz)
 if (!file.exists(file.path(OUTPUT, "objs", "riboWaltz.RData"))) {
-  #annotation <- create_annotation(gtfpath = "C:/kutluaylab/data/annotation_files/Homo_sapiens.GRCh37.87_notab.gtf") # human
-  annotation <- create_annotation(gtfpath = "C:/kutluaylab/data/annotation_files/chlSab2.ncbiRefSeq.gtf") # Vero
+  annotation <- create_annotation(gtfpath = "C:/kutluaylab/data/annotation_files/Homo_sapiens.GRCh37.87_notab.gtf") # human
+  #annotation <- create_annotation(gtfpath = "C:/kutluaylab/data/annotation_files/chlSab2.ncbiRefSeq.gtf") # Vero
 
 
   reads_list <- bamtolist(bamfolder = file.path(OUTPUT, "transcriptome_bams"), annotation = annotation)
 
-  reads_list_filter <- length_filter(data = reads_list, length_filter_mode = "custom", length_range = 25:33)
+  reads_list_filter <- length_filter(data = reads_list, length_filter_mode = "custom", length_range = 27:34) # <<< change length range according to RLD
   #reads_list_filter <- length_filter(data = reads_list, length_filter_mode = "custom", length_filter_vector = 25:33)
   #reads_list_filter <- length_filter(data = reads_list, length_filter_mode = "periodicity", periodicity_threshold = 20)
   
@@ -373,7 +370,7 @@ for (sample in SAMPLES) {
 example_frames_heat <- frame_psite_length(reads_psite_list, region = "all")
 
 pt <- example_frames_heat[["plot"]]
-pt <- pt + theme(strip.text.y = element_text(size=10))
+pt <- pt + theme(strip.text.y = element_text(size = 10))
 if (save_figs) ggsave(filename = paste0(OUTPUT, "/reports", "/figs/", "frame_psite_heatmap.pdf"), plot = pt)
 print(pt)
 ```
@@ -479,6 +476,7 @@ ggplot(subset(mg_df, region=="stopCodon"), aes(x=bin, y=value, group = group, co
 
 ## Differential expression analysis
 ```{r}
+# Don't forget to change contrast pairs in function script
 dge_all_filt <- readRDS(file.path(OUTPUT, "objs", "dge_cds_filt_norm.rds"))
 de_analysis(dge_all_filt)
 
@@ -486,14 +484,14 @@ dge_cds_filt <- readRDS(file.path(OUTPUT, "objs", "dge_cds_st_filt_norm.rds"))
 de_analysis(dge_cds_filt, region = "_cds")
 ```
 
-### heatmap 
+### DE heatmap 
 ```{r}
 require(RColorBrewer)
 require(gplots)
 
-de_rnaseq <- read_csv(file.path(OUTPUT, "reports", "de_genes", "time_IFNpos_vs_IFNneg_rnaseq.csv"))
-de_riboseq <- read_csv(file.path(OUTPUT, "reports", "de_genes", "time_IFNpos_vs_IFNneg_riboseq.csv"))
-de_te <- read_csv(file.path(OUTPUT, "reports", "de_genes", "time_IFNpos_vs_IFNneg_te.csv"))
+de_rnaseq <- read_csv(file.path(OUTPUT, "reports", "de_genes", "time_IFN4h_vs_mock_rnaseq.csv"))
+de_riboseq <- read_csv(file.path(OUTPUT, "reports", "de_genes", "time_IFN4h_vs_mock_riboseq.csv"))
+de_te <- read_csv(file.path(OUTPUT, "reports", "de_genes", "time_IFN4h_vs_mock_te.csv"))
 
 # why not do full_join?
 union_de_genes <- union(union(de_riboseq$ensembl_gene_id, de_rnaseq$ensembl_gene_id), de_te$ensembl_gene_id)
@@ -504,12 +502,13 @@ combined_fc <- data.frame(ensembl_gene_id = union_de_genes) %>%
   left_join(de_te[,c("ensembl_gene_id", "logFC")], by = "ensembl_gene_id", suffix=c("", "_te")) %>% 
   dplyr::rename(logFC_rnaseq = logFC)
 
+# may consider changing the heatmap breaks according to DE logFC range. now is (-6, 6).
 plot_heatmap(combined_fc, save_fig = T)
 
 
-de_rnaseq_cds <- read_csv(file.path(OUTPUT, "reports", "de_genes", "time_IFNpos_vs_IFNneg_rnaseq_cds.csv"))
-de_riboseq_cds <- read_csv(file.path(OUTPUT, "reports", "de_genes", "time_IFNpos_vs_IFNneg_riboseq_cds.csv"))
-de_te_cds <- read_csv(file.path(OUTPUT, "reports", "de_genes", "time_IFNpos_vs_IFNneg_te_cds.csv"))
+de_rnaseq_cds <- read_csv(file.path(OUTPUT, "reports", "de_genes", "time_IFN4h_vs_mock_rnaseq_cds.csv"))
+de_riboseq_cds <- read_csv(file.path(OUTPUT, "reports", "de_genes", "time_IFN4h_vs_mock_riboseq_cds.csv"))
+de_te_cds <- read_csv(file.path(OUTPUT, "reports", "de_genes", "time_IFN4h_vs_mock_te_cds.csv"))
 
 union_de_genes_cds <- union(union(de_riboseq_cds$ensembl_gene_id, de_rnaseq_cds$ensembl_gene_id), de_te_cds$ensembl_gene_id)
 
