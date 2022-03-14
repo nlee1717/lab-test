@@ -40,6 +40,7 @@ RUN conda install mamba -n base -c conda-forge && \
     bioconductor-deseq2 \
     r-ggrepel \
     r-gplots \
+    r-gridextra \
     r-statmod \
     ribotish \
     samtools \
