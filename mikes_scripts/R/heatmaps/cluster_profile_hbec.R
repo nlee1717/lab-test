@@ -39,7 +39,7 @@ print(paste0("gene count present in gene_cluster and all diffex tables: ", lengt
 
 
 
-## Querying the logFC information from diffex_genes_full tables according to gene_intersect and collecting the information in logFC_cluster_table ##
+## Querying the logFC information from diffex_genes_full tables and collecting the information in a table called logFC_cluster_table ##
 
 logFC_cluster_table <- NULL
 
@@ -70,6 +70,11 @@ colnames(mock_table) <- c("genes", "logFC", "time", "cluster")
 
 logFC_cluster_table <- rbind(mock_table, logFC_cluster_table)
 
+dir.create(path = file.path(outputpath, "cluster_profile"))
+write.csv(logFC_cluster_table,
+          file = file.path(outputpath, "cluster_profile",
+                           paste0(outputname, "_logFC_cluster_table.csv")))
+
 
 
 
@@ -85,15 +90,12 @@ num.in.cluster <- data.frame(table(gene_cluster[gene_intersect, ]))
 names(num.in.cluster) <- c("cluster", "n")
 
 cluster.labels <- paste0("Cluster ", num.in.cluster$cluster, " (n=", num.in.cluster$n, ")")
-names(cluster.labels) <- seq(num_cluster)
+# names(cluster.labels) <- seq(num_cluster)
+names(cluster.labels) <- num.in.cluster$cluster
 
 
 
 ## Plotting ##
-# colPalette <- c("#AEC7E87F", "#98DF8A7F", "#FF98967F",
-#                 "#C49C947F", "#C5B0D57F", "#FFBB787F", "#D627287F",
-#                 "#FF7F0E7F", "#9467BD7F", "#8C564B7F", "#E377C27F",
-#                 "#F7B6D27F", "#2CA02C7F", "#1F77B47F") # Naky's color palette
 
 colPalette <- c("#AEC7E87F", "#98DF8A7F", "#FF98967F",
                 "#C49C947F", "#C5B0D57F", "#FFBB787F",
@@ -119,8 +121,8 @@ profile_plots <- (ggplot(logFC_cluster_table, aes(x = as.numeric(time),
 
   + scale_y_continuous(name = "log2(fold-change over mock)")
   + scale_x_continuous(name = "Hours post-infection",
-                       # breaks = c(24, 48, 72, 96), # HBEC # change accordingly
-                       breaks = c(2, 6, 12, 24), # Vero
+                       # breaks = c(24, 48, 72, 96), # HBEC only
+                       breaks = c(2, 6, 12, 24), # Vero only
                        expand = c(0.05, 0))
 
   # + facet_grid(cluster ~ ., nrow = 3, scales="free")
@@ -143,12 +145,7 @@ profile_plots <- (ggplot(logFC_cluster_table, aes(x = as.numeric(time),
 )
 
 
-# ggsave(file.path(outputpath, "cluster_profile", paste0(outputname, ".png")),
-#        plot = profile_plots,
-#        height = unit(20, "cm"), # 20cm and 15cm are a little too big
-#        width = unit(15, "cm"),
-#        dpi = 300)
-
 png(file.path(outputpath, "cluster_profile", paste0(outputname, ".png")), width = 1500, height = 2000, res = 300)
 print(profile_plots)
 dev.off()
+
