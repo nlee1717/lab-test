@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:focal
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ARG DEBIAN_FRONTEND=noninteractive
@@ -32,14 +32,12 @@ RUN conda install mamba -n base -c conda-forge && \
     pandas \
     paralyzer \
     perl \
-    pycrac \
     r \
     r-base \
     r-essentials \
     bioconductor-complexheatmap \
     bioconductor-edger \
     bioconductor-deseq2 \
-    bioconductor-wavcluster \
     r-ggrepel \
     r-gplots \
     r-gridextra \

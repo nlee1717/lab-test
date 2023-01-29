@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:focal
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ARG DEBIAN_FRONTEND=noninteractive
@@ -24,35 +24,23 @@ ENV PATH=/opt/conda/bin:$PATH
 # install packages to base environment
 RUN conda install mamba -n base -c conda-forge && \
     mamba install -n base -c bioconda -c conda-forge \
-    bbmap \
     bedtools \
-    bowtie \
-    fastqc \
-    mageck \
-    pandas \
-    paralyzer \
+    bowtie2 \
+    bwa \
+    cufflinks \
+    htseq \
     perl \
-    pycrac \
     r \
     r-base \
     r-essentials \
-    bioconductor-complexheatmap \
-    bioconductor-edger \
     bioconductor-deseq2 \
-    bioconductor-wavcluster \
-    r-ggrepel \
-    r-gplots \
-    r-gridextra \
-    r-statmod \
-    ribotish \
     samtools \
-    seqkit \
-    sra-tools \
-    subread \
-    star -y
+    tophat -y
 
 COPY entrypoint.sh /opt/conda/bin/entrypoint.sh
 RUN chmod a+x /opt/conda/bin/entrypoint.sh
 
 #ENTRYPOINT ["/opt/conda/bin/entrypoint.sh"]
 CMD [".", "/opt/conda/bin/entrypoint.sh"]
+
+RUN cpan -i File::Type

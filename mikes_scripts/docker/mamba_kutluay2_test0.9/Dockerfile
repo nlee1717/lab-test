@@ -32,14 +32,12 @@ RUN conda install mamba -n base -c conda-forge && \
     pandas \
     paralyzer \
     perl \
-    pycrac \
     r \
     r-base \
     r-essentials \
     bioconductor-complexheatmap \
     bioconductor-edger \
     bioconductor-deseq2 \
-    bioconductor-wavcluster \
     r-ggrepel \
     r-gplots \
     r-gridextra \

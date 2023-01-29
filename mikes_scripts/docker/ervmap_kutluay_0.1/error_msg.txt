@@ -1,0 +1,184 @@
+(base) kutluaylab@DESKTOP-2NQPH6G:/mnt/c/kutluaylab/scripts/lab-test/mikes_scripts/docker/ERVmap_kutluay_0.1$ docker build -t yiqingw/ervmap_kutluay:0.1 .
+[+] Building 679.4s (9/12)
+ => [internal] load build definition from Dockerfile                                              0.0s
+ => => transferring dockerfile: 1.48kB                                                            0.0s
+ => [internal] load .dockerignore                                                                 0.0s
+ => => transferring context: 2B                                                                   0.0s
+ => [internal] load metadata for docker.io/library/ubuntu:focal                                   1.4s
+ => [auth] library/ubuntu:pull token for registry-1.docker.io                                     0.0s
+ => [internal] load build context                                                                 0.0s
+ => => transferring context: 34B                                                                  0.0s
+ => CACHED [1/7] FROM docker.io/library/ubuntu:focal@sha256:9c2004872a3a9fcec8cc757ad65c042de1da  0.0s
+ => [2/7] RUN apt-get update --fix-missing &&   apt-get install -y wget bzip2 build-essential   142.9s
+ => [3/7] RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.s  18.1s
+ => ERROR [4/7] RUN conda install mamba -n base -c conda-forge &&     mamba install -n base -c  516.9s
+------
+ > [4/7] RUN conda install mamba -n base -c conda-forge &&     mamba install -n base -c bioconda -c conda-forge     bedtools     bowtie2     bwa     cufflinks     htseq     perl     r     r-base     r-essentials     bioconductor-deseq2     samtools     tophat -y:
+#8 0.764 Collecting package metadata (current_repodata.json): ...working... done
+#8 17.52 Solving environment: ...working... done
+#8 21.19
+#8 21.19
+#8 21.19 ==> WARNING: A newer version of conda exists. <==
+#8 21.19   current version: 4.12.0
+#8 21.19   latest version: 22.9.0
+#8 21.19
+#8 21.19 Please update conda by running
+#8 21.19
+#8 21.19     $ conda update -n base -c defaults conda
+#8 21.19
+#8 21.19
+#8 21.20
+#8 21.20 ## Package Plan ##
+#8 21.20
+#8 21.20   environment location: /opt/conda
+#8 21.20
+#8 21.20   added / updated specs:
+#8 21.20     - mamba
+#8 21.20
+#8 21.20
+#8 21.20 The following packages will be downloaded:
+#8 21.20
+#8 21.20     package                    |            build
+#8 21.20     ---------------------------|-----------------
+#8 21.20     bzip2-1.0.8                |       h7f98852_4         484 KB  conda-forge
+#8 21.20     c-ares-1.18.1              |       h7f98852_0         113 KB  conda-forge
+#8 21.20     ca-certificates-2022.9.24  |       ha878542_0         150 KB  conda-forge
+#8 21.20     certifi-2022.9.24          |     pyhd8ed1ab_0         155 KB  conda-forge
+#8 21.20     icu-58.2                   |    hf484d3e_1000        22.6 MB  conda-forge
+#8 21.20     keyutils-1.6.1             |       h166bdaf_0         115 KB  conda-forge
+#8 21.20     krb5-1.19.3                |       h3790be6_0         1.4 MB  conda-forge
+#8 21.20     libarchive-3.5.2           |       hccf745f_1         1.6 MB  conda-forge
+#8 21.20     libcurl-7.84.0             |       h91b91d3_0         337 KB
+#8 21.20     libedit-3.1.20191231       |       he28a2e2_2         121 KB  conda-forge
+#8 21.20     libev-4.33                 |       h516909a_1         104 KB  conda-forge
+#8 21.20     libgcc-ng-11.2.0           |       h1234567_1         5.3 MB
+#8 21.20     libgomp-11.2.0             |       h1234567_1         474 KB
+#8 21.20     libiconv-1.17              |       h166bdaf_0         1.4 MB  conda-forge
+#8 21.20     libnghttp2-1.46.0          |       hce63b2e_0         680 KB
+#8 21.20     libsolv-0.7.20             |       h4ff587b_0         456 KB
+#8 21.20     libssh2-1.10.0             |       ha56f1ee_2         233 KB  conda-forge
+#8 21.20     libstdcxx-ng-12.2.0        |      h46fd767_18         4.3 MB  conda-forge
+#8 21.20     libxml2-2.9.14             |       h74e7548_0         718 KB
+#8 21.20     lz4-c-1.9.3                |       h9c3ff4c_1         179 KB  conda-forge
+#8 21.20     lzo-2.10                   |    h516909a_1000         314 KB  conda-forge
+#8 21.20     mamba-0.15.3               |   py39h951de11_0         734 KB  conda-forge
+#8 21.20     openssl-1.1.1q             |       h7f8727e_0         2.5 MB
+#8 21.20     python_abi-3.9             |           2_cp39           4 KB  conda-forge
+#8 21.20     reproc-14.2.3              |       h7f98852_0          28 KB  conda-forge
+#8 21.20     reproc-cpp-14.2.3          |       h9c3ff4c_0          20 KB  conda-forge
+#8 21.20     zstd-1.5.2                 |       ha4553b6_0         488 KB
+#8 21.20     ------------------------------------------------------------
+#8 21.20                                            Total:        44.9 MB
+#8 21.20
+#8 21.20 The following NEW packages will be INSTALLED:
+#8 21.20
+#8 21.20   bzip2              conda-forge/linux-64::bzip2-1.0.8-h7f98852_4
+#8 21.20   c-ares             conda-forge/linux-64::c-ares-1.18.1-h7f98852_0
+#8 21.20   icu                conda-forge/linux-64::icu-58.2-hf484d3e_1000
+#8 21.20   keyutils           conda-forge/linux-64::keyutils-1.6.1-h166bdaf_0
+#8 21.20   krb5               conda-forge/linux-64::krb5-1.19.3-h3790be6_0
+#8 21.20   libarchive         conda-forge/linux-64::libarchive-3.5.2-hccf745f_1
+#8 21.20   libcurl            pkgs/main/linux-64::libcurl-7.84.0-h91b91d3_0
+#8 21.20   libedit            conda-forge/linux-64::libedit-3.1.20191231-he28a2e2_2
+#8 21.20   libev              conda-forge/linux-64::libev-4.33-h516909a_1
+#8 21.20   libiconv           conda-forge/linux-64::libiconv-1.17-h166bdaf_0
+#8 21.20   libnghttp2         pkgs/main/linux-64::libnghttp2-1.46.0-hce63b2e_0
+#8 21.20   libsolv            pkgs/main/linux-64::libsolv-0.7.20-h4ff587b_0
+#8 21.20   libssh2            conda-forge/linux-64::libssh2-1.10.0-ha56f1ee_2
+#8 21.20   libxml2            pkgs/main/linux-64::libxml2-2.9.14-h74e7548_0
+#8 21.20   lz4-c              conda-forge/linux-64::lz4-c-1.9.3-h9c3ff4c_1
+#8 21.20   lzo                conda-forge/linux-64::lzo-2.10-h516909a_1000
+#8 21.20   mamba              conda-forge/linux-64::mamba-0.15.3-py39h951de11_0
+#8 21.20   python_abi         conda-forge/linux-64::python_abi-3.9-2_cp39
+#8 21.20   reproc             conda-forge/linux-64::reproc-14.2.3-h7f98852_0
+#8 21.20   reproc-cpp         conda-forge/linux-64::reproc-cpp-14.2.3-h9c3ff4c_0
+#8 21.20   zstd               pkgs/main/linux-64::zstd-1.5.2-ha4553b6_0
+#8 21.20
+#8 21.20 The following packages will be UPDATED:
+#8 21.20
+#8 21.20   ca-certificates    pkgs/main::ca-certificates-2022.3.29-~ --> conda-forge::ca-certificates-2022.9.24-ha878542_0
+#8 21.20   certifi            pkgs/main/linux-64::certifi-2021.10.8~ --> conda-forge/noarch::certifi-2022.9.24-pyhd8ed1ab_0
+#8 21.20   libgcc-ng                               9.3.0-h5101ec6_17 --> 11.2.0-h1234567_1
+#8 21.20   libgomp                                 9.3.0-h5101ec6_17 --> 11.2.0-h1234567_1
+#8 21.20   libstdcxx-ng       pkgs/main::libstdcxx-ng-9.3.0-hd4cf53~ --> conda-forge::libstdcxx-ng-12.2.0-h46fd767_18
+#8 21.20   openssl                                 1.1.1n-h7f8727e_0 --> 1.1.1q-h7f8727e_0
+#8 21.20
+#8 21.20
+#8 21.20 Proceed ([y]/n)?
+#8 21.20
+#8 21.20 Downloading and Extracting Packages
+libgomp-11.2.0       | 474 KB    | ########## | 100%
+certifi-2022.9.24    | 155 KB    | ########## | 100%
+lzo-2.10             | 314 KB    | ########## | 100%
+libcurl-7.84.0       | 337 KB    | ########## | 100%
+c-ares-1.18.1        | 113 KB    | ########## | 100%
+libsolv-0.7.20       | 456 KB    | ########## | 100%
+libstdcxx-ng-12.2.0  | 4.3 MB    | ########## | 100%
+libxml2-2.9.14       | 718 KB    | ########## | 100%
+libev-4.33           | 104 KB    | ########## | 100%
+zstd-1.5.2           | 488 KB    | ########## | 100%
+icu-58.2             | 22.6 MB   | ########## | 100%
+bzip2-1.0.8          | 484 KB    | ########## | 100%
+ca-certificates-2022 | 150 KB    | ########## | 100%
+libnghttp2-1.46.0    | 680 KB    | ########## | 100%
+krb5-1.19.3          | 1.4 MB    | ########## | 100%
+lz4-c-1.9.3          | 179 KB    | ########## | 100%
+reproc-cpp-14.2.3    | 20 KB     | ########## | 100%
+libiconv-1.17        | 1.4 MB    | ########## | 100%
+libgcc-ng-11.2.0     | 5.3 MB    | ########## | 100%
+mamba-0.15.3         | 734 KB    | ########## | 100%
+libedit-3.1.20191231 | 121 KB    | ########## | 100%
+reproc-14.2.3        | 28 KB     | ########## | 100%
+libssh2-1.10.0       | 233 KB    | ########## | 100%
+keyutils-1.6.1       | 115 KB    | ########## | 100%
+python_abi-3.9       | 4 KB      | ########## | 100%
+libarchive-3.5.2     | 1.6 MB    | ########## | 100%
+openssl-1.1.1q       | 2.5 MB    | ########## | 100%
+#8 31.93 Preparing transaction: ...working... done
+#8 32.00 Verifying transaction: ...working... done
+#8 32.48 Executing transaction: ...working... done
+#8 516.6
+#8 516.6                   __    __    __    __
+#8 516.6                  /  \  /  \  /  \  /  \
+#8 516.6                 /    \/    \/    \/    \
+#8 516.6 ███████████████/  /██/  /██/  /██/  /████████████████████████
+#8 516.6               /  / \   / \   / \   / \  \____
+#8 516.6              /  /   \_/   \_/   \_/   \    o \__,
+#8 516.6             / _/                       \_____/  `
+#8 516.6             |/
+#8 516.6         ███╗   ███╗ █████╗ ███╗   ███╗██████╗  █████╗
+#8 516.6         ████╗ ████║██╔══██╗████╗ ████║██╔══██╗██╔══██╗
+#8 516.6         ██╔████╔██║███████║██╔████╔██║██████╔╝███████║
+#8 516.6         ██║╚██╔╝██║██╔══██║██║╚██╔╝██║██╔══██╗██╔══██║
+#8 516.6         ██║ ╚═╝ ██║██║  ██║██║ ╚═╝ ██║██████╔╝██║  ██║
+#8 516.6         ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝╚═════╝ ╚═╝  ╚═╝
+#8 516.6
+#8 516.6         mamba (0.15.3) supported by @QuantStack
+#8 516.6
+#8 516.6         GitHub:  https://github.com/mamba-org/mamba
+#8 516.6         Twitter: https://twitter.com/QuantStack
+#8 516.6
+#8 516.6 █████████████████████████████████████████████████████████████
+#8 516.6
+#8 516.6
+#8 516.6 Looking for: ['bedtools', 'bowtie2', 'bwa', 'cufflinks', 'htseq', 'perl', 'r', 'r-base', 'r-essentials', 'bioconductor-deseq2', 'samtools', 'tophat']
+#8 516.6
+#8 516.6
+#8 516.6 Pinned packages:
+#8 516.6   - python 3.9.*
+#8 516.6
+#8 516.6
+#8 516.6 Encountered problems while solving:
+#8 516.6   - package tophat-2.0.13-py27_2 requires python >=2.7,<2.8.0a0, but none of the providers can be installed
+#8 516.6
+#8 516.6 pkgs/main/linux-64
+#8 516.6 bioconda/noarch
+#8 516.6 pkgs/r/noarch
+#8 516.6 bioconda/linux-64
+#8 516.6 pkgs/main/noarch
+#8 516.6 pkgs/r/linux-64
+#8 516.6 conda-forge/noarch
+#8 516.6 conda-forge/linux-64
+------
+executor failed running [/bin/sh -c conda install mamba -n base -c conda-forge &&     mamba install -n
+base -c bioconda -c conda-forge     bedtools     bowtie2     bwa     cufflinks     htseq     perl     r     r-base     r-essentials     bioconductor-deseq2     samtools     tophat -y]: exit code: 1
